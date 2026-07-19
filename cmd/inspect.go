@@ -1,40 +1,91 @@
-/*
-Copyright © 2026 NAME HERE <EMAIL ADDRESS>
-
-*/
 package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
-// inspectCmd represents the inspect command
 var inspectCmd = &cobra.Command{
-	Use:   "inspect",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "inspect [path]",
+	Short: "Statically inspect project files (Dockerfile, docker-compose.yml)",
+	Long: `Scans the given directory for Dockerfiles and docker-compose.yml files,
+performing static analysis to identify common anti-patterns or issues.`,
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("inspect called")
+		targetPath := "."
+		if len(args) > 0 {
+			targetPath = args[0]
+		}
+
+		fmt.Printf("Inspecting project at: %s\n\n", targetPath)
+
+		// Check Dockerfile
+		dockerfilePath := filepath.Join(targetPath, "Dockerfile")
+		if content, err := os.ReadFile(dockerfilePath); err == nil {
+			fmt.Println("✅ Found Dockerfile")
+			analyzeDockerfile(string(content))
+		} else {
+			fmt.Println("⚠️  No Dockerfile found in the directory.")
+		}
+
+		fmt.Println("---")
+
+		// Check docker-compose.yml
+		composePath := filepath.Join(targetPath, "docker-compose.yml")
+		if content, err := os.ReadFile(composePath); err == nil {
+			fmt.Println("✅ Found docker-compose.yml")
+			analyzeCompose(string(content))
+		} else {
+			// Fallback to docker-compose.yaml
+			composeYamlPath := filepath.Join(targetPath, "docker-compose.yaml")
+			if content, err := os.ReadFile(composeYamlPath); err == nil {
+				fmt.Println("✅ Found docker-compose.yaml")
+				analyzeCompose(string(content))
+			} else {
+				fmt.Println("⚠️  No docker-compose.yml or docker-compose.yaml found in the directory.")
+			}
+		}
 	},
+}
+
+func analyzeDockerfile(content string) {
+	lines := strings.Split(content, "\n")
+	hasLatest := false
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "FROM ") && strings.Contains(trimmed, ":latest") {
+			hasLatest = true
+		}
+	}
+
+	if hasLatest {
+		fmt.Println("   ❌ Anti-pattern: Using ':latest' tag in FROM statement. Consider pinning to a specific version.")
+	} else {
+		fmt.Println("   ✅ Base images look well-defined.")
+	}
+}
+
+func analyzeCompose(content string) {
+	lines := strings.Split(content, "\n")
+	hasLatest := false
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "image:") && strings.Contains(trimmed, ":latest") {
+			hasLatest = true
+		}
+	}
+
+	if hasLatest {
+		fmt.Println("   ❌ Anti-pattern: Using ':latest' tag in Compose image. Consider pinning to a specific version.")
+	} else {
+		fmt.Println("   ✅ Compose images look well-defined.")
+	}
 }
 
 func init() {
 	rootCmd.AddCommand(inspectCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// inspectCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// inspectCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

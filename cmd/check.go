@@ -65,6 +65,8 @@ This will query all providers (Docker, Kubernetes, etc.) and generate a report.`
 			rnd = renderer.NewJSON()
 		case "markdown":
 			rnd = renderer.NewMarkdown()
+		case "html":
+			rnd = renderer.NewHTML()
 		case "term":
 			fallthrough
 		default:
@@ -90,5 +92,5 @@ var format string
 
 func init() {
 	rootCmd.AddCommand(checkCmd)
-	checkCmd.Flags().StringVarP(&format, "format", "f", "term", "Output format (term, json, markdown)")
+	checkCmd.Flags().StringVarP(&format, "format", "f", "term", "Output format (term, json, markdown, html)")
 }
