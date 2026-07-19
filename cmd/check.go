@@ -18,6 +18,8 @@ import (
 	dockerChecks "github.com/raphgm/container-doctor/providers/docker/checks"
 	"github.com/raphgm/container-doctor/providers/compose"
 	composeChecks "github.com/raphgm/container-doctor/providers/compose/checks"
+	"github.com/raphgm/container-doctor/providers/buildx"
+	buildxChecks "github.com/raphgm/container-doctor/providers/buildx/checks"
 )
 
 // checkCmd represents the check command
@@ -40,6 +42,10 @@ This will query all providers (Docker, Kubernetes, etc.) and generate a report.`
 		
 		reg.Register(compose.New(
 			composeChecks.NewInstalled(exec),
+		))
+
+		reg.Register(buildx.New(
+			buildxChecks.NewInstalled(exec),
 		))
 		
 		eng := engine.New(reg)
