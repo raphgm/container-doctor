@@ -15,29 +15,31 @@ import (
 	"github.com/raphgm/container-doctor/internal/renderer"
 	"github.com/raphgm/container-doctor/pkg/report"
 	"github.com/raphgm/container-doctor/providers/docker"
-	"github.com/raphgm/container-doctor/providers/docker/checks"
+	dockerChecks "github.com/raphgm/container-doctor/providers/docker/checks"
+	"github.com/raphgm/container-doctor/providers/compose"
+	composeChecks "github.com/raphgm/container-doctor/providers/compose/checks"
 )
 
 // checkCmd represents the check command
 var checkCmd = &cobra.Command{
 	Use:   "check",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Run all registered diagnostic checks",
+	Long: `Run all diagnostic checks to determine the health of your environment.
+This will query all providers (Docker, Kubernetes, etc.) and generate a report.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		exec := executor.New()
 		
 		reg := engine.NewRegistry()
 		reg.Register(docker.New(
-			checks.NewInstalled(exec),
-			checks.NewDaemon(exec),
-			checks.NewContext(exec),
-			checks.NewVersion(exec),
-			checks.NewSocket(exec),
+			dockerChecks.NewInstalled(exec),
+			dockerChecks.NewDaemon(exec),
+			dockerChecks.NewContext(exec),
+			dockerChecks.NewVersion(exec),
+			dockerChecks.NewSocket(exec),
+		))
+		
+		reg.Register(compose.New(
+			composeChecks.NewInstalled(exec),
 		))
 		
 		eng := engine.New(reg)
