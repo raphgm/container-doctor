@@ -34,6 +34,7 @@ to quickly create a Cobra application.`,
 		reg := engine.NewRegistry()
 		reg.Register(docker.New(
 			checks.NewInstalled(exec),
+			checks.NewDaemon(exec),
 		))
 		
 		eng := engine.New(reg)
