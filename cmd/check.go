@@ -38,6 +38,8 @@ This will query all providers (Docker, Kubernetes, etc.) and generate a report.`
 		reg.Register(system.New(
 			systemChecks.NewArch(),
 			systemChecks.NewCPU(),
+			systemChecks.NewMemory(),
+			systemChecks.NewDisk(),
 		))
 
 		reg.Register(docker.New(
