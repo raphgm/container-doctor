@@ -37,6 +37,7 @@ to quickly create a Cobra application.`,
 			checks.NewDaemon(exec),
 			checks.NewContext(exec),
 			checks.NewVersion(exec),
+			checks.NewSocket(exec),
 		))
 		
 		eng := engine.New(reg)
