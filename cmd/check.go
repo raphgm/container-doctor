@@ -59,8 +59,19 @@ This will query all providers (Docker, Kubernetes, etc.) and generate a report.`
 		eng := engine.New(reg)
 		rep := eng.Run(cmd.Context())
 		
-		term := renderer.NewTerminal()
-		if err := term.Render(rep); err != nil {
+		var rnd renderer.Renderer
+		switch format {
+		case "json":
+			rnd = renderer.NewJSON()
+		case "markdown":
+			rnd = renderer.NewMarkdown()
+		case "term":
+			fallthrough
+		default:
+			rnd = renderer.NewTerminal()
+		}
+		
+		if err := rnd.Render(rep); err != nil {
 			fmt.Printf("Error rendering report: %v\n", err)
 			os.Exit(1)
 		}
@@ -75,6 +86,9 @@ This will query all providers (Docker, Kubernetes, etc.) and generate a report.`
 	},
 }
 
+var format string
+
 func init() {
 	rootCmd.AddCommand(checkCmd)
+	checkCmd.Flags().StringVarP(&format, "format", "f", "term", "Output format (term, json, markdown)")
 }
